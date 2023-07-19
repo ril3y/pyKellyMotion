@@ -44,7 +44,22 @@ class Parser:
         self.phase_current = pkt[7]
 
     def __init__(self):
-        pass
+        self.low_speed = None
+        self.brake_sw2 = None
+        self.actual_dir = None
+        self.setting_dir = None
+        self.controller_temp = None
+        self.motor_temp = None
+        self.battery_voltage = None
+        self.hall_c = None
+        self.hall_b = None
+        self.hall_a = None
+        self.reverse_sw = None
+        self.forward_sw = None
+        self.foot_sw = None
+        self.brake_sw1 = None
+        self.brake_pedal = None
+        self.tps_pedal = None
 
     def parse_packet_response(self, buff: List[ByteString]):
         header_byte = buff[0]
