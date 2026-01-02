@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pykellymotion"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python library and CLI for Kelly motor controllers"
 readme = "README.md"
 license = {text = "MIT"}
