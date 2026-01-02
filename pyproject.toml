@@ -9,7 +9,7 @@ description = "Python library and CLI for Kelly motor controllers"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Riley Porter", email = "riley@example.com"}
+    {name = "Riley Porter", email = "rileyporter@gmail.com"}
 ]
 keywords = ["kelly", "motor", "controller", "bldc", "ev", "electric-vehicle", "serial"]
 classifiers = [
