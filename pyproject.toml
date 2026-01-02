@@ -39,7 +39,7 @@ dev = [
 ]
 
 [project.scripts]
-kelly-motion = "pykellymotion.cli:main"
+pykelly = "pykellymotion.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/ril3y/pyKellyMotion"
