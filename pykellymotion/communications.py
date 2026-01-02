@@ -2,15 +2,18 @@
 Kelly Motor Controller Serial Communications
 """
 
-import serial
-from serial.serialutil import SerialException
-import sys
-from time import sleep
 from typing import Optional, Tuple
 
-from protocol import (
-    Commands, BAUD_RATE, TIMEOUT_MS,
-    build_packet, validate_response, parse_response, calculate_checksum
+import serial
+from serial.serialutil import SerialException
+
+from .protocol import (
+    BAUD_RATE,
+    TIMEOUT_MS,
+    Commands,
+    build_packet,
+    parse_response,
+    validate_response,
 )
 
 
@@ -75,7 +78,7 @@ class Communications:
         Waits for complete packet based on length byte.
         """
         if not self.is_open():
-            return b''
+            return b""
 
         if timeout_ms is not None:
             old_timeout = self.serial.timeout
@@ -85,7 +88,7 @@ class Communications:
             # Read header (cmd + length)
             header = self.serial.read(2)
             if len(header) < 2:
-                return b''
+                return b""
 
             length = header[1]
             # Limit length to 16 max (protocol limit)
@@ -103,13 +106,13 @@ class Communications:
 
         except Exception as e:
             print(f"[!] Read error: {e}")
-            return b''
+            return b""
 
         finally:
             if timeout_ms is not None:
                 self.serial.timeout = old_timeout
 
-    def send_command(self, cmd: int, data: bytes = b'', retries: int = 2) -> Tuple[bool, bytes]:
+    def send_command(self, cmd: int, data: bytes = b"", retries: int = 2) -> Tuple[bool, bytes]:
         """
         Send command and receive validated response.
 
@@ -149,7 +152,7 @@ class Communications:
             _, resp_data = parse_response(response)
             return True, resp_data
 
-        return False, b''
+        return False, b""
 
     def send_monitor_query(self, monitor_num: int) -> Tuple[bool, bytes]:
         """
@@ -168,7 +171,7 @@ class Communications:
         elif monitor_num == 3:
             cmd = Commands.MONITOR_THREE
         else:
-            return False, b''
+            return False, b""
 
         return self.send_command(cmd)
 

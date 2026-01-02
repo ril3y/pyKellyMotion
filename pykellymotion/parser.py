@@ -2,14 +2,16 @@
 Kelly Motor Controller Packet Parser
 """
 
-from typing import Optional, Dict, Any
-from dataclasses import dataclass, field
-from protocol import Commands, CALIBRATION_PARAMS
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
+from .protocol import CALIBRATION_PARAMS, Commands
 
 
 @dataclass
 class MonitorData:
     """Container for monitor packet data."""
+
     # Monitor packet 1 (0x3A)
     tps_pedal: int = 0
     brake_pedal: int = 0
@@ -42,7 +44,7 @@ class Parser:
     def __init__(self, debug: bool = False):
         self.debug = debug
         self.monitor = MonitorData()
-        self._config_data: bytes = b''
+        self._config_data: bytes = b""
 
     def parse_response(self, cmd: int, data: bytes) -> bool:
         """
@@ -93,7 +95,7 @@ class Parser:
         self.monitor.low_speed = data[15]
 
         if self.debug:
-            print(f"[+] Parsed monitor packet 1")
+            print("[+] Parsed monitor packet 1")
         return True
 
     def _parse_monitor_two(self, data: bytes) -> bool:
@@ -118,7 +120,7 @@ class Parser:
         self.monitor.error_code = (data[0] << 8) | data[1] if len(data) >= 2 else 0
 
         if self.debug:
-            print(f"[+] Parsed monitor packet 3")
+            print("[+] Parsed monitor packet 3")
         return True
 
     def _parse_config(self, data: bytes) -> bool:
@@ -151,33 +153,37 @@ class Parser:
             return None
 
         param = CALIBRATION_PARAMS[param_name]
-        offset = param['offset']
-        param_type = param['type']
-        fmt = param['format']
+        offset = param["offset"]
+        param_type = param["type"]
+        fmt = param["format"]
 
         if offset >= len(self._config_data):
             return None
 
         if param_type == 0:  # Bit
-            bit = param.get('bit', 0)
+            bit = param.get("bit", 0)
             byte_val = self._config_data[offset]
             return (byte_val >> bit) & 1
 
         elif param_type == 1:  # Single byte
             val = self._config_data[offset]
-            if fmt == 'so':  # Signed
+            if fmt == "so":  # Signed
                 return val if val < 128 else val - 256
             return val
 
         elif param_type == 2:  # Multi-byte
-            length = param.get('length', 2)
+            length = param.get("length", 2)
             if offset + length > len(self._config_data):
                 return None
 
-            if fmt == 'a':  # ASCII
-                return self._config_data[offset:offset + length].decode('ascii', errors='ignore').rstrip('\x00')
-            elif fmt == 'h':  # Hex
-                return self._config_data[offset:offset + length].hex()
+            if fmt == "a":  # ASCII
+                return (
+                    self._config_data[offset : offset + length]
+                    .decode("ascii", errors="ignore")
+                    .rstrip("\x00")
+                )
+            elif fmt == "h":  # Hex
+                return self._config_data[offset : offset + length].hex()
             else:  # Unsigned integer (big-endian)
                 value = 0
                 for i in range(length):

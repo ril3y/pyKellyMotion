@@ -4,11 +4,11 @@ Kelly Motor Controller Interface
 
 import math
 from time import sleep
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
-from communications import Communications
-from parser import Parser, MonitorData
-from protocol import Commands, CALIBRATION_PARAMS, decode_errors
+from .communications import Communications
+from .parser import MonitorData, Parser
+from .protocol import CALIBRATION_PARAMS, Commands, decode_errors
 
 
 class KellyController:
@@ -32,7 +32,7 @@ class KellyController:
         self.tire_diameter = 12  # inches, for MPH calculation
 
         self._connected = False
-        self._version_data: bytes = b''
+        self._version_data: bytes = b""
 
     # --- Connection Management ---
 
@@ -187,8 +187,8 @@ class KellyController:
 
         for name, value in config.items():
             param = CALIBRATION_PARAMS.get(name, {})
-            desc = param.get('description', name)
-            readonly = ' (RO)' if param.get('readonly') else ''
+            desc = param.get("description", name)
+            readonly = " (RO)" if param.get("readonly") else ""
             print(f"  {desc}: {value}{readonly}")
 
         print("=" * 60)
