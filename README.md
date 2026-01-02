@@ -11,45 +11,67 @@ A Python library for interfacing with Kelly motor controllers via serial/UART co
 - **Firmware Version Query** - Get controller firmware information
 - **Motor Identification** - Enter/exit motor auto-tuning mode
 - **Checksum Validation** - All packets validated for data integrity
+- **CLI Tool** - Command-line interface for quick testing and monitoring
 - **Clean Pythonic API** - Simple interface with type hints and dataclasses
 
 ## Installation
 
-### Prerequisites
-- Python 3.7+
-- Serial port access (USB-to-serial adapter or built-in UART)
-
-### Install Dependencies
+### From PyPI
 ```bash
-pip install pyserial
+pip install pykellymotion
 ```
 
-### Clone Repository
+### From Source
 ```bash
 git clone https://github.com/ril3y/pyKellyMotion.git
 cd pyKellyMotion
+pip install .
+```
+
+### Development Install
+```bash
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
 
-### Command Line
+### Command Line (pykelly)
+
+After installation, the `pykelly` command is available:
+
 ```bash
-# Real-time monitoring
-python main.py COM3
+# Real-time monitoring (default)
+pykelly COM3
+
+# Monitor with custom interval
+pykelly COM3 monitor --interval 0.25
 
 # Get firmware version
-python main.py /dev/ttyUSB0 version
+pykelly /dev/ttyUSB0 version
 
 # Read controller configuration
-python main.py COM3 config
+pykelly COM3 config
 
-# Read phase current ADC
-python main.py /dev/ttyUSB0 phase
+# Read config as raw hex
+pykelly COM3 config --raw
+
+# Single monitor read (JSON output)
+pykelly COM3 single --json
+
+# Read phase current ADC values
+pykelly COM3 phase
+
+# Motor identification mode
+pykelly COM3 identify
+
+# Enable debug output
+pykelly COM3 --debug monitor
 ```
 
-### Python API
+### Python Library
+
 ```python
-from kelly_controller import KellyController
+from pykellymotion import KellyController
 
 # Connect
 controller = KellyController("COM3", debug=False)
@@ -92,6 +114,8 @@ Kelly Controller          Computer
 
 #### Connection
 ```python
+from pykellymotion import KellyController
+
 controller = KellyController(comport: str, debug: bool = False)
 controller.connect() -> bool
 controller.disconnect()
@@ -137,6 +161,20 @@ controller.get_phase_current_adc() -> tuple         # Raw ADC (a, b, c)
 controller.enter_identify_mode() -> bool            # Enter motor auto-tune
 controller.exit_identify_mode() -> bool             # Exit motor auto-tune
 controller.is_identify_active() -> bool             # Check if tuning active
+```
+
+### Low-Level Access
+
+```python
+from pykellymotion import Communications, Commands
+
+comm = Communications("COM3", debug=True)
+comm.open()
+
+success, data = comm.send_command(Commands.GET_VERSION)
+print(f"Version: {data.hex()}")
+
+comm.close()
 ```
 
 ### Configuration Parameters
@@ -226,43 +264,45 @@ RX: 11 [len] [version data] [checksum]
 
 ```
 pyKellyMotion/
-├── protocol.py          # Protocol constants, commands, checksum
-├── communications.py    # Serial communication layer
-├── parser.py            # Packet parsing and data extraction
-├── kelly_controller.py  # High-level controller interface
-└── main.py              # CLI entry point
+├── pykellymotion/
+│   ├── __init__.py          # Public API exports
+│   ├── cli.py               # CLI entry point (pykelly command)
+│   ├── protocol.py          # Protocol constants, commands, checksum
+│   ├── communications.py    # Serial communication layer
+│   ├── parser.py            # Packet parsing and data extraction
+│   └── kelly_controller.py  # High-level controller interface
+├── tests/
+│   ├── test_protocol.py     # Protocol unit tests
+│   ├── test_parser.py       # Parser unit tests
+│   └── test_cli.py          # CLI argument tests
+└── pyproject.toml           # Package configuration
 ```
 
 ## Advanced Usage
 
 ### Custom Monitor Callback
 ```python
+from pykellymotion import KellyController
+
 def my_callback(monitor_data):
     print(f"Speed: {monitor_data.motor_speed} RPM")
     if monitor_data.motor_temp > 80:
         print("WARNING: Motor hot!")
 
+controller = KellyController("COM3")
+controller.connect()
 controller.start_monitor_loop(callback=my_callback, interval=0.25)
-```
-
-### Direct Command Access
-```python
-from communications import Communications
-from protocol import Commands
-
-comm = Communications("COM3", debug=True)
-comm.open()
-
-success, data = comm.send_command(Commands.GET_VERSION)
-print(f"Version: {data.hex()}")
-
-comm.close()
 ```
 
 ### Debug Mode
 ```python
 controller = KellyController("COM3", debug=True)
 # Shows TX/RX packets in hex
+```
+
+Or via CLI:
+```bash
+pykelly COM3 --debug monitor
 ```
 
 ## Error Codes
@@ -282,13 +322,30 @@ controller = KellyController("COM3", debug=True)
 | 10 | Hall Sensor Error |
 | 15 | Motor Over Temp |
 
+## Testing
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=pykellymotion
+
+# Lint and format
+ruff check .
+ruff format .
+```
+
 ## Troubleshooting
 
 ### No Response
 - Check TX/RX wiring (may need swap)
 - Verify 19200 baud
 - Ensure controller powered
-- Enable `debug=True`
+- Enable `--debug` flag or `debug=True`
 
 ### Permission Denied (Linux)
 ```bash
@@ -305,7 +362,8 @@ sudo usermod -a -G dialout $USER
 1. Fork repository
 2. Create feature branch
 3. Make changes with tests
-4. Submit pull request
+4. Run `ruff check` and `ruff format`
+5. Submit pull request
 
 ## License
 
